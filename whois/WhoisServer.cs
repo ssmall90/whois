@@ -28,25 +28,37 @@ namespace whois
             NetworkStream socketStream;
             try
             {
+                //Create a TCP socket to listen for requests on port 43.
+                #region Create and Start TCP Listener
                 listener = new TcpListener(IPAddress.Any, 43);
                 listener.Start();
                 Console.WriteLine("Server Has Started Listening");
+                #endregion
 
+
+
+                //Start a contiinous Loop to handle incoming requests.
+                #region Handle Incoming Requests 
                 while (true)
                 {
+                    //Upon receipt of a request create a socket to handle it.
                     connection = listener.AcceptSocket();
                     socketStream = new NetworkStream(connection);
                     connection.SendTimeout = 10000;
                     connection.ReceiveTimeout = 10000;
                     Console.WriteLine("Connection Received");
                     DoRequest(socketStream);
+
+                    //Close network stream and socket once request is complete.
                     socketStream.Close();
                     connection.Close();
-                }
+                } 
+                #endregion
             }
+            // Catch any errors and display exception to console. 
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString()); // An example
+                Console.WriteLine(e.ToString()); 
             }
         }
 
@@ -58,22 +70,26 @@ namespace whois
         /// <param name="socketStream"></param>
         public void DoRequest(NetworkStream socketStream)
         {
-
+            //Create Streamreader and Streamwriter to handle socket I/O
             StreamWriter sw = new StreamWriter(socketStream);
             StreamReader sr = new StreamReader(socketStream);
 
+
             try
             {
+                // Read the first line of the request
+                string line = sr.ReadLine(); 
 
-                string line = sr.ReadLine();
 
-
+                //Handle and null lines
                 if (line == null)
                 {
                     Console.WriteLine("Ignoring null command");
                     return;
                 }
 
+
+                #region Handling of Post Request 
                 else if (line == "POST / HTTP/1.1")
                 {
                     int contentLength = 0;
@@ -82,22 +98,28 @@ namespace whois
                     {
                         line = sr.ReadLine(); // Skip to blank line
 
-                        if (line.StartsWith("Content-Length: "))
+                        if (line.StartsWith("Content-Length: ")) //
                         {
-                            contentLength = Int32.Parse(line.Substring(16));
+                            contentLength = Int32.Parse(line.Substring(16)); // Retrieve length of the content
                         }
                     }
 
+                    // Set line to empty string and append each character of the stream to line
                     line = "";
+                    for (int i = 0; i < contentLength; i++) line += (char)sr.Read(); // 
 
-                    for (int i = 0; i < contentLength; i++) line += (char)sr.Read();
 
+                    //Split line into 2 sections and store the ID and the Value 
                     String[] slices = line.Split(new char[] { '&' }, 2);
                     String ID = slices[0].Substring(5);
                     String value = slices[1].Substring(9);
 
+
+                    //return a result from an update request to the database
                     string result = databaseManager.UpdateExistingUser(ID, "location", value);
 
+
+                    //if request was unsuccessful send response and console log the result
                     if (result.Contains("could not be found in database"))
                     {
                         sw.WriteLine("HTTP/1.1 404 Not Found");
@@ -108,6 +130,8 @@ namespace whois
                         Console.WriteLine($"Received an update request for '{ID}' to '{value}");
                         Console.WriteLine(result);
                     }
+
+                    //If result was successful, send response and console log the result
                     else
                     {
 
@@ -122,13 +146,22 @@ namespace whois
                     }
 
                 }
+                #endregion
 
+
+
+                #region Handling of Get Request
                 else if (line.StartsWith("GET /?name=") && line.EndsWith(" HTTP/1.1"))
                 {
                     string[] slices = line.Split(" ");  // Split into 3 pieces
-                    string ID = slices[1].Substring(7);  //
+                    string ID = slices[1].Substring(7);  // Store ID
+
+
+                    // Look up Location field of specified ID in database
                     string result = (databaseManager.GetLookup(ID, "location"));
 
+
+                    //If lookup was successful. Write and send response, then console log the result of lookup.
                     if (result is not null)
                     {
 
@@ -141,6 +174,8 @@ namespace whois
                         Console.WriteLine($"Performed Lookup on '{ID}' returning '{result}'");
                     }
 
+
+                    //If lookup was unsuccessful. Write and send response, then console log the result of lookup.
                     else
                     {
                         sw.WriteLine("HTTP/1.1 404 Not Found");
@@ -152,6 +187,11 @@ namespace whois
                     }
 
                 }
+                #endregion
+
+
+                #region Handling Unrecognised Requests
+                // Write and send response. Console log the unrecognised command
                 else
                 {
 
@@ -162,15 +202,21 @@ namespace whois
 
                     Console.WriteLine($"Unrecognised command: '{line}'");
 
-                }
+                } 
+                #endregion
 
-            }
+            } 
+
+
+            // Catch and unexpected behaviour during command processing and display exceptions to console.
             catch (Exception ex)
             {
                 Console.WriteLine($"Fault in Command Processing:{ex.ToString()} ");
                 sw.Close();
                 sr.Close();
             }
+
+            // Close streamreader and streamwriter as request has now been processed.
             finally
             {
                 sw.Close();
