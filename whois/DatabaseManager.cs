@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace whois
 {
-    internal class DatabaseManager
+    public class DatabaseManager : IDatabaseManager
     {
         static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=L3tM31n";
         private MySqlConnection _connection;
@@ -109,7 +109,7 @@ namespace whois
             try
             {
 
-                if (GetLookup(LoginId,field) != null)
+                if (GetLookup(LoginId, field) != null)
                 {
                     _connection.Open();
 
@@ -125,7 +125,7 @@ namespace whois
                 }
 
                 else
-                { 
+                {
                     return $"{LoginId} could not be found in database";
                 }
 
