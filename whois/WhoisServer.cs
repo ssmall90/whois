@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace whois
 {
+    /// <summary>
+    /// This is a server class for the database and networking coursework. 
+    /// </summary>
     public class WhoisServer
     {
         IDatabaseManager databaseManager;
@@ -61,7 +64,6 @@ namespace whois
                 Console.WriteLine(e.ToString()); 
             }
         }
-
 
         /// <summary>
         /// When the server receives a connection from on the TCP listener
@@ -225,7 +227,6 @@ namespace whois
             }
         }
 
-
         /// <summary>
         /// This method is used to handle command line inputs formatted according to coursework brief.
         /// It processes inputs and allocates any permissable commands to the database manager.
@@ -361,7 +362,6 @@ namespace whois
 
             Console.WriteLine("OK");
         }
-
 
         /// <summary>
         /// This method will delete a user from the database

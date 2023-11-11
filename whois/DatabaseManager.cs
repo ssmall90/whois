@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace whois
 {
+    /// <summary>
+    /// This is a databse managing class for the database and networking coursework. 
+    /// </summary>
+    /// 
     public class DatabaseManager : IDatabaseManager
     {
         static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=L3tM31n";
