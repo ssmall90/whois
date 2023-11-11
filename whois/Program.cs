@@ -193,9 +193,17 @@ void ProcessCommand(string command)
             String[] pieces = operation.Split(new char[] { '=' }, 2);
             field = pieces[0];
             if (pieces.Length == 2) update = pieces[1];
+
+
+            if (operation == "")
+            {
+
+                Delete(ID);
+                return;
+            }
         }
 
-        if (operation == null || operation == string.Empty)
+        if (operation == null)
         {
 
             if (databaseManager.GetLookup(ID, "loginId") is not null)
@@ -207,6 +215,7 @@ void ProcessCommand(string command)
                 Console.WriteLine("User does not exist");
             }
         }
+
 
         else if (update == null)
         {
@@ -280,5 +289,22 @@ void Update(String ID, String field, String update)
 
 
     Console.WriteLine("OK");
+}
+
+void Delete(String ID)
+{
+    Console.WriteLine($"Are you sure you want to delete record '{ID}' from database? Y/N");
+
+    string response = Console.ReadLine();
+
+    if(response == "Y" || response == "y")
+    {
+        Console.WriteLine(databaseManager.DeleteUser(ID));
+    }
+    else
+    {
+        Console.WriteLine($"User '{ID}' was not deleted from database");
+    }
+
 }
 

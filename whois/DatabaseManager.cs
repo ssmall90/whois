@@ -122,7 +122,7 @@ namespace whois
 
                     _connection.Close();
 
-                    return $"Successfully Updated {LoginId}'s {field} to {valueToInsert}";
+                    return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
                 }
 
                 else
@@ -134,7 +134,41 @@ namespace whois
             }
             catch (Exception ex)
             {
-                return $"Database Error {(ex.ToString())}";
+                return $"Database error {(ex.ToString())}";
+            }
+
+        }
+
+        public string DeleteUser(string LoginId)
+        {
+            try
+            {
+
+                if (GetLookup(LoginId, "loginId") != null)
+                {
+                    _connection.Open();
+
+                    string deleteUser = $"DELETE FROM `acw_whois_database`.`users` WHERE (`loginId` = '{LoginId}')";
+
+                    MySqlCommand cmd = new MySqlCommand(deleteUser, _connection);
+
+                    cmd.ExecuteNonQuery();
+
+                    _connection.Close();
+
+                    return $"User '{LoginId}' has been deleted from the database";
+                }
+
+
+                else
+                {
+                    return $"User '{LoginId}' could not be found in database";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return $"Database error {(ex.ToString())}";
             }
 
         }
