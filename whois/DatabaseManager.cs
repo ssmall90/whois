@@ -108,7 +108,6 @@ namespace whois
 
             try
             {
-                //_connection.Open();
 
                 if (GetLookup(LoginId,field) != null)
                 {

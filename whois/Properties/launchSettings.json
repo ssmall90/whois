@@ -2,7 +2,7 @@
   "profiles": {
     "whois": {
       "commandName": "Project",
-      "commandLineArgs": "\r\nsheldon?\r\ncssbct?location\r\n"
+      "commandLineArgs": "sheldon?location=Home\r\nsheldon?\r\nshelodn?\r\n\r\n"
     }
   }
 }
