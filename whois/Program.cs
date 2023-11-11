@@ -209,6 +209,7 @@ void ProcessCommand(string command)
             if (databaseManager.GetLookup(ID, "loginId") is not null)
             {
                 Dump(ID);
+                return;
             }
             else
             {
@@ -224,7 +225,7 @@ void ProcessCommand(string command)
 
         else
         {
-            if (databaseManager.GetLookup(ID, "loginId") is not null)
+            if (databaseManager.GetLookup(ID, "loginId") is null)
             {
                 string newID = command.Split("?")[0];
 
@@ -251,10 +252,7 @@ void ProcessCommand(string command)
 
 void Dump(String ID)
 {
-
     databaseManager.GetDump(ID);
-
-
 }
 
 void Lookup(String ID, String field)
@@ -278,9 +276,9 @@ void Update(String ID, String field, String update)
     if (databaseManager.GetLookup(ID, "loginId") is not null)
     {
 
-        databaseManager.UpdateExistingUser(ID, field, update);
+        Console.WriteLine(databaseManager.UpdateExistingUser(ID, field, update));
 
-        Console.WriteLine(databaseManager.GetLookup(ID, field));
+        //Console.WriteLine(databaseManager.GetLookup(ID, field));
     }
     else
     {
