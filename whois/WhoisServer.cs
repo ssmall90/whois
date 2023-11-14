@@ -83,7 +83,7 @@ namespace whois
                 string line = sr.ReadLine(); 
 
 
-                //Handle and null lines
+                //Handle any null lines
                 if (line == null)
                 {
                     Console.WriteLine("Ignoring null command");
@@ -117,7 +117,7 @@ namespace whois
                     String value = slices[1].Substring(9);
 
 
-                    //return a result from an update request to the database
+                    //Return result from update request to the database
                     string result = databaseManager.UpdateExistingUser(ID, "location", value);
 
 
@@ -213,7 +213,7 @@ namespace whois
             // Catch and unexpected behaviour during command processing and display exceptions to console.
             catch (Exception ex)
             {
-                Console.WriteLine($"Fault in Command Processing:{ex.ToString()} ");
+                Console.WriteLine($"Fault in Command Processing: Respone Timeout");
                 sw.Close();
                 sr.Close();
             }
