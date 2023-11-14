@@ -47,8 +47,8 @@ namespace whois
                     //Upon receipt of a request create a socket to handle it.
                     connection = listener.AcceptSocket();
                     socketStream = new NetworkStream(connection);
-                    connection.SendTimeout = 10000;
-                    connection.ReceiveTimeout = 10000;
+                    connection.SendTimeout = 1000;
+                    connection.ReceiveTimeout = 1000;
                     Console.WriteLine("Connection Received");
                     DoRequest(socketStream);
 
