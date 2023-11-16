@@ -56,24 +56,35 @@ namespace whois
 
         public string GetLookup(string LoginId, string field)
         {
-            _connection.Open();
-
             string result = null;
 
-            string getLookUp = $"SELECT {field} FROM acw_whois_database.users WHERE loginId = '{LoginId}';";
-
-            MySqlCommand cmd = new MySqlCommand(getLookUp, _connection);
-
-            MySqlDataReader rdr = cmd.ExecuteReader();
-
-            while (rdr.Read())
+            if (field.ToLower() == "location" || field.ToLower() == "userid" || field.ToLower() == "loginid" || field.ToLower() == "forenames" || field.ToLower() == "surname" || field.ToLower() == "position" || field.ToLower() == "email" || field.ToLower() == "phone")
             {
-                result = ($"Look up of {field} for {LoginId} returned {rdr[0]}");
+                _connection.Open();
+
+                string getLookUp = $"SELECT {field} FROM acw_whois_database.users WHERE loginId = '{LoginId}';";
+
+                MySqlCommand cmd = new MySqlCommand(getLookUp, _connection);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                while (rdr.Read())
+                {
+                    result = ($"Look up of {field} for {LoginId} returned {rdr[0]}");
+                }
+
+                _connection.Close();
+
+                return result;
+
+            }
+            else
+            {
+
+                return $"{field} is not a recognised field ";
             }
 
-            _connection.Close();
 
-            return result;
 
         }
 

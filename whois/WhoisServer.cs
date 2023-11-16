@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -35,7 +36,7 @@ namespace whois
                 #region Create and Start TCP Listener
                 listener = new TcpListener(IPAddress.Any, 43);
                 listener.Start();
-                Console.WriteLine("Server Has Started Listening");
+                //Console.WriteLine("Server Has Started Listening");
                 #endregion
 
 
@@ -44,7 +45,9 @@ namespace whois
                 #region Handle Incoming Requests 
                 while (true)
                 {
+
                     //Upon receipt of a request create a socket to handle it.
+                    Console.WriteLine("Server Has Started Listening.....");
                     connection = listener.AcceptSocket();
                     socketStream = new NetworkStream(connection);
                     connection.SendTimeout = 1000;
@@ -55,13 +58,13 @@ namespace whois
                     //Close network stream and socket once request is complete.
                     socketStream.Close();
                     connection.Close();
-                } 
+                }
                 #endregion
             }
             // Catch any errors and display exception to console. 
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString()); 
+                Console.WriteLine(e.ToString());
             }
         }
 
@@ -76,11 +79,11 @@ namespace whois
             StreamWriter sw = new StreamWriter(socketStream);
             StreamReader sr = new StreamReader(socketStream);
 
-
             try
             {
-                // Read the first line of the request
-                string line = sr.ReadLine(); 
+
+                //Read first line
+                string line = sr.ReadLine();
 
 
                 //Handle any null lines
@@ -131,6 +134,8 @@ namespace whois
                         sw.Flush();
                         Console.WriteLine($"Received an update request for '{ID}' to '{value}");
                         Console.WriteLine(result);
+                        Console.WriteLine();
+
                     }
 
                     //If result was successful, send response and console log the result
@@ -144,7 +149,9 @@ namespace whois
                         sw.Flush();
 
                         Console.WriteLine($"Received an update request for '{ID}' to '{value}");
+                        Console.WriteLine();
                         Console.WriteLine(result);
+
                     }
 
                 }
@@ -173,7 +180,9 @@ namespace whois
                         sw.WriteLine(result);
                         sw.Flush();
 
+ 
                         Console.WriteLine($"Performed Lookup on '{ID}' returning '{result}'");
+                        Console.WriteLine();
                     }
 
 
@@ -185,6 +194,8 @@ namespace whois
                         sw.WriteLine();
                         sw.Flush();
                         Console.WriteLine($"Performed Lookup on '{ID}' returning '404 Not Found'");
+                        Console.WriteLine();
+
 
                     }
 
@@ -203,19 +214,23 @@ namespace whois
                     sw.Flush();
 
                     Console.WriteLine($"Unrecognised command: '{line}'");
+                    Console.WriteLine();
 
-                } 
+
+                }
                 #endregion
 
-            } 
+            }
 
 
             // Catch and unexpected behaviour during command processing and display exceptions to console.
             catch (Exception ex)
             {
-                Console.WriteLine($"Fault in Command Processing: Respone Timeout");
+                Console.WriteLine($"Respone Timeout");
+                Console.WriteLine();
                 sw.Close();
                 sr.Close();
+
             }
 
             // Close streamreader and streamwriter as request has now been processed.
@@ -224,8 +239,12 @@ namespace whois
                 sw.Close();
                 sr.Close();
 
+
             }
         }
+    
+
+        
 
         /// <summary>
         /// This method is used to handle command line inputs formatted according to coursework brief.
@@ -324,6 +343,7 @@ namespace whois
         /// <param name="field"></param>
         public void Lookup(String ID, String field)
         {
+            
             if (databaseManager.GetLookup(ID, "loginId") is not null)
             {
                 Console.WriteLine($"lookup field: {field}");
