@@ -433,8 +433,9 @@ namespace whois
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"User '{ID}' was not deleted from database");
+                Console.ForegroundColor = ConsoleColor.White;
             }
 
         }
