@@ -283,7 +283,7 @@ namespace whois
                 if (operation == null)
                 {
 
-                    if (databaseManager.GetLookup(ID, "loginId") is not null)
+                    if (databaseManager.CheckUserExists(ID) is not null)
                     {
                         Dump(ID);
                         return;
@@ -344,7 +344,7 @@ namespace whois
         public void Lookup(String ID, String field)
         {
             
-            if (databaseManager.GetLookup(ID, "loginId") is not null)
+            if (databaseManager.GetLookup(ID,field) is not null)
             {
                 Console.WriteLine($"lookup field: {field}");
                 Console.WriteLine(databaseManager.GetLookup(ID, field));

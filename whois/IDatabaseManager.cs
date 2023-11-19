@@ -6,6 +6,7 @@ namespace whois
     {
         MySqlConnection Connection { get; }
 
+        string CheckUserExists(string LoginId);
         string DeleteUser(string LoginId);
         void GetDump(string LoginId);
         string GetLookup(string LoginId, string field);

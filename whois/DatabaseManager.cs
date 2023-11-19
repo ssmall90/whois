@@ -29,7 +29,7 @@ namespace whois
 
             _connection.Open();
 
-            string getUserDump = $"SELECT * FROM acw_whois_database.users WHERE LoginId = '{LoginId}'";
+            string getUserDump = $"SELECT \r\n    personalInfo.userId,\r\n    loginIdTable.loginId,\r\n    personalInfo.title,\r\n    personalInfo.forenames,\r\n    personalInfo.surname,\r\n    positions.positionTitle AS position,\r\n    contactInformation.email,\r\n    contactInformation.primaryPhone AS phone,\r\n    locations.locationName AS location_name\r\nFROM personalInfo \r\nJOIN loginIdTable ON personalInfo.userId = loginIdTable.userId\r\nJOIN userPositions userPositions ON personalInfo.userId = userPositions.userId\r\nJOIN positions ON userPositions.positionId = positions.positionId\r\nJOIN contactInformation ON personalInfo.userId = contactInformation.userId\r\nJOIN loginLocations ON loginIdTable.loginId = loginLocations.loginId\r\nJOIN locations ON loginLocations.locationId = locations.locationId\r\nWHERE loginidtable.loginId = '{LoginId}';\r\n";
 
             MySqlCommand cmd = new MySqlCommand(getUserDump, _connection);
 
@@ -51,6 +51,31 @@ namespace whois
             rdr.Close();
 
             _connection.Close();
+
+        }
+
+
+        public string CheckUserExists(string LoginId)
+
+        {
+            string result = null;
+
+            _connection.Open();
+
+            string checkUser = $"SELECT loginId\r\nFROM loginIdTable\r\nWHERE loginId = '{LoginId}'";
+
+            MySqlCommand cmd = new MySqlCommand(checkUser, _connection);
+
+            MySqlDataReader rdr = cmd.ExecuteReader();
+
+            while (rdr.Read())
+            {
+                result = $"{rdr[0]}";
+            }
+
+            _connection.Close();
+
+            return result;
 
         }
 
