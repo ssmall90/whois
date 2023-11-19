@@ -85,7 +85,7 @@ namespace whois
             {
 
                 //Read first line
-                string line = sr.ReadLine();
+                string line = sr.ReadLine().Trim();
 
 
                 //Handle any null lines
@@ -308,7 +308,9 @@ namespace whois
                     }
                     else
                     {
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("User does not exist");
+                        Console.ForegroundColor= ConsoleColor.White;
                     }
                 }
 
@@ -353,7 +355,7 @@ namespace whois
         /// <param name="ID"></param>
         public void Dump(String ID)
         {
-            databaseManager.GetDump(ID);
+            Console.WriteLine(databaseManager.GetDump(ID));
         }
 
         /// <summary>
@@ -399,14 +401,16 @@ namespace whois
 
             if (databaseManager.GetLookup(ID, "loginId") is not null)
             {
-
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(databaseManager.UpdateExistingUser(ID, field, update));
+                Console.ForegroundColor = ConsoleColor.White;
 
             }
             else
             {
-                //databaseManager.AddNewUser(ID);
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(databaseManager.UpdateExistingUser(ID, field, update));
+                Console.ForegroundColor = ConsoleColor.White;
             }
 
         }

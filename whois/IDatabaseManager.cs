@@ -11,7 +11,7 @@ namespace whois
         string CheckPositionExists(string value);
         string CheckUserExists(string LoginId);
         string DeleteUser(string LoginId);
-        void GetDump(string LoginId);
+        string GetDump(string LoginId);
         string GetLookup(string LoginId, string field);
         string HandleFieldInput(string sqlCmd);
         string HandleFieldInput(string sqlCmd, int numberOfFields);

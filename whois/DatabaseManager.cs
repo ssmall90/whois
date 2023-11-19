@@ -25,7 +25,7 @@ namespace whois
             _connection = new MySqlConnection(connectionString);
         }
 
-        public void GetDump(string LoginId)
+        public string GetDump(string LoginId)
         {
 
             _connection.Open();
@@ -36,22 +36,26 @@ namespace whois
 
             MySqlDataReader rdr = cmd.ExecuteReader();
 
+            StringBuilder sb = new StringBuilder();
+
             while (rdr.Read())
             {
-                Console.WriteLine($"User Id: {rdr[0]}");
-                Console.WriteLine($"Login Id: {rdr[1]}");
-                Console.WriteLine($"Title: {rdr[2]}");
-                Console.WriteLine($"Fornames: {rdr[3]}");
-                Console.WriteLine($"Surname: {rdr[4]}");
-                Console.WriteLine($"Position: {rdr[5]}");
-                Console.WriteLine($"Email: {rdr[6]}");
-                Console.WriteLine($"Phone: {rdr[7]}");
-                Console.WriteLine($"Location: {rdr[8]}");
+                sb.AppendLine($"User Id: {rdr[0]}");
+                sb.AppendLine($"Login Id: {rdr[1]}");
+                sb.AppendLine($"Title: {rdr[2]}");
+                sb.AppendLine($"Fornames: {rdr[3]}");
+                sb.AppendLine($"Surname: {rdr[4]}");
+                sb.AppendLine($"Position: {rdr[5]}");
+                sb.AppendLine($"Email: {rdr[6]}");
+                sb.AppendLine($"Phone: {rdr[7]}");
+                sb.AppendLine($"Location: {rdr[8]}");
 
             }
             rdr.Close();
 
             _connection.Close();
+
+            return sb.ToString();
 
         }
 
@@ -180,11 +184,11 @@ namespace whois
             }
             if (result == null)
             {
-                return $"look up of '{field}' for loginid: '{LoginId}' returned: \r\nUser Can Not Be Found In Database";
+                return $"look up of '{field}' for loginid: '{LoginId}' \r\nreturned: User Can Not Be Found In Database";
             }
             else
             {
-                return $"look up of '{field}' for loginid: '{LoginId}' returned:  \r\n{result}";
+                return $"look up of '{field}' for loginid: '{LoginId}' \r\nreturned: {result}";
             }
 
 
