@@ -280,6 +280,7 @@ namespace whois
                     }
                 }
 
+
                 if (operation == null)
                 {
 
@@ -400,10 +401,13 @@ namespace whois
 
             if (response == "Y" || response == "y")
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(databaseManager.DeleteUser(ID));
+                Console.ForegroundColor = ConsoleColor.White;
             }
             else
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"User '{ID}' was not deleted from database");
             }
 

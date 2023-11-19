@@ -330,21 +330,26 @@ namespace whois
 
         }
 
-
         public string DeleteUser(string LoginId)
         {
             try
             {
 
-                if (GetLookup(LoginId, "loginId") != null)
+                if (CheckUserExists(LoginId) != null)
                 {
                     _connection.Open();
 
-                    string deleteUser = $"DELETE FROM `acw_whois_database`.`users` WHERE (`loginId` = '{LoginId}')";
+                    string deleteUser = $"DELETE FROM `acw_whois_database`.`loginlocations` WHERE (`loginId` = '{LoginId}')";
 
                     MySqlCommand cmd = new MySqlCommand(deleteUser, _connection);
 
                     cmd.ExecuteNonQuery();
+
+                    string deleteUserLocation = $"DELETE FROM `acw_whois_database`.`loginIdTable` WHERE (`loginId` = '{LoginId}')";
+
+                    MySqlCommand cmd1 = new MySqlCommand(deleteUserLocation, _connection);
+
+                    cmd1.ExecuteNonQuery();
 
                     _connection.Close();
 
@@ -364,7 +369,6 @@ namespace whois
             }
 
         }
-
 
         public string HandleFieldInput(string sqlCmd, int numberOfFields)
         {
