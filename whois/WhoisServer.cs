@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using MySqlX.XDevAPI.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -121,7 +123,22 @@ namespace whois
 
 
                     //Return result from update request to the database
-                    string result = databaseManager.UpdateExistingUser(ID, "location", value);
+                    string result;
+
+                    if (databaseManager.CheckUserExists(ID) is null)
+                    {
+
+                        databaseManager.AddNewUser(ID);
+                        result = databaseManager.UpdateExistingUser(ID, "location", value);
+                        
+
+
+                    }
+                    else
+                    {
+
+                         result = databaseManager.UpdateExistingUser(ID, "location", value);
+                    }
 
 
                     //if request was unsuccessful send response and console log the result
@@ -344,15 +361,18 @@ namespace whois
         /// </summary>
         /// <param name="ID"></param>
         /// <param name="field"></param>
-        public void Lookup(String ID, String field)
+        public string Lookup(String ID, String field)
         {
             
             if (databaseManager.CheckUserExists(ID) is not null)
             {
+                string result = databaseManager.GetLookup(ID, field);
                 Console.WriteLine($"lookup field: {field}");
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(databaseManager.GetLookup(ID, field));
+                Console.WriteLine(result);
                 Console.ForegroundColor= ConsoleColor.White;
+
+                return result;
             }
             else
             {
@@ -360,6 +380,8 @@ namespace whois
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"User '{ID}' does not exist");
                 Console.ForegroundColor = ConsoleColor.White;
+
+                return $"User '{ID}' does not exist";
             }
 
         }

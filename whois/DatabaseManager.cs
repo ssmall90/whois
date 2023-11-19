@@ -55,7 +55,6 @@ namespace whois
 
         }
 
-
         public string CheckUserExists(string LoginId)
 
         {
@@ -179,8 +178,15 @@ namespace whois
                     return $"{field} is not a recognised field ";
 
             }
+            if (result == null)
+            {
+                return $"look up of '{field}' for loginid: '{LoginId}' returned: \r\nUser Can Not Be Found In Database";
+            }
+            else
+            {
+                return $"look up of '{field}' for loginid: '{LoginId}' returned:  \r\n{result}";
+            }
 
-            return $"look up of '{field}' for loginid: '{LoginId}' returned:  \r\n{result}";
 
 
         }
