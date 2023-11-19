@@ -1,4 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
+using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +30,7 @@ namespace whois
 
             _connection.Open();
 
-            string getUserDump = $"SELECT \r\n    personalInfo.userId,\r\n    loginIdTable.loginId,\r\n    personalInfo.title,\r\n    personalInfo.forenames,\r\n    personalInfo.surname,\r\n    positions.positionTitle AS position,\r\n    contactInformation.email,\r\n    contactInformation.primaryPhone AS phone,\r\n    locations.locationName AS location_name\r\nFROM personalInfo \r\nJOIN loginIdTable ON personalInfo.userId = loginIdTable.userId\r\nJOIN userPositions userPositions ON personalInfo.userId = userPositions.userId\r\nJOIN positions ON userPositions.positionId = positions.positionId\r\nJOIN contactInformation ON personalInfo.userId = contactInformation.userId\r\nJOIN loginLocations ON loginIdTable.loginId = loginLocations.loginId\r\nJOIN locations ON loginLocations.locationId = locations.locationId\r\nWHERE loginidtable.loginId = '{LoginId}';\r\n";
+            string getUserDump = $"SELECT \r\n    personalInfo.userId,\r\n    loginIdTable.loginId,\r\n    personalInfo.title,\r\n    personalInfo.forenames,\r\n    personalInfo.surname,\r\n    positions.positionTitle AS position,\r\n    contactInformation.email,\r\n    contactInformation.primaryPhone AS phone,\r\n    locations.locationName AS location_name\r\nFROM personalInfo \r\nJOIN loginIdTable ON personalInfo.userId = loginIdTable.userId\r\nJOIN  userPositions ON personalInfo.userId = userPositions.userId\r\nJOIN positions ON userPositions.positionId = positions.positionId\r\nJOIN contactInformation ON personalInfo.userId = contactInformation.userId\r\nJOIN loginLocations ON loginIdTable.loginId = loginLocations.loginId\r\nJOIN locations ON loginLocations.locationId = locations.locationId\r\nWHERE loginidtable.loginId = '{LoginId}';\r\n";
 
             MySqlCommand cmd = new MySqlCommand(getUserDump, _connection);
 
@@ -79,64 +80,148 @@ namespace whois
 
         }
 
-        public string GetLookup(string LoginId, string field)
+        public string CheckLocationExists(string value)
         {
             string result = null;
 
-            if (field.ToLower() == "location" || field.ToLower() == "userid" || field.ToLower() == "loginid" || field.ToLower() == "forenames" || field.ToLower() == "surname" || field.ToLower() == "position" || field.ToLower() == "email" || field.ToLower() == "phone")
-            {
-                _connection.Open();
+            string checkValue = $"SELECT locationId\r\nFROM locations\r\nWHERE locationName = '{value}';";
 
-                string getLookUp = $"SELECT {field} FROM acw_whois_database.users WHERE loginId = '{LoginId}';";
-
-                MySqlCommand cmd = new MySqlCommand(getLookUp, _connection);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
-                {
-                    result = ($"Look up of {field} for {LoginId} returned {rdr[0]}");
-                }
-
-                _connection.Close();
-
-                return result;
-
-            }
-            else
-            {
-
-                return $"{field} is not a recognised field ";
-            }
-
-
-
-        }
-
-        public void UpdateNewUser(string LoginId, string field, string valueToInsert)
-        {
-            _connection.Open();
-
-            int lastID = 0;
-
-            string retrieveLastId = "SELECT MAX(userId) FROM users";
-
-            MySqlCommand cmd = new MySqlCommand(retrieveLastId, _connection);
+            MySqlCommand cmd = new MySqlCommand(checkValue, _connection);
 
             MySqlDataReader rdr = cmd.ExecuteReader();
 
             while (rdr.Read())
             {
-                lastID = int.Parse(rdr[0].ToString()!) + 1;
+                result = $"{rdr[0]}";
+            }
+
+            rdr.Close();
+
+            return result;
+        }
+
+        public string CheckPositionExists(string value)
+        {
+            string result = null;
+
+            string checkValue = $"SELECT positionId\r\nFROM positions\r\nWHERE positionTitle = '{value}';";
+
+            MySqlCommand cmd = new MySqlCommand(checkValue, _connection);
+
+            MySqlDataReader rdr = cmd.ExecuteReader();
+
+            while (rdr.Read())
+            {
+                result = $"{rdr[0]}";
+            }
+
+            rdr.Close();
+
+            return result;
+        }
+
+        public string GetLookup(string LoginId, string field)
+        {
+            string result = null;
+            field = field.ToLower();
+
+            _connection.Open();
+
+            switch (field)
+            {
+                case "location":
+
+                    result = HandleFieldInput($"SELECT locations.locationName\r\nFROM loginLocations\r\nJOIN loginIdTable ON loginLocations.loginId = loginIdTable.loginId\r\nJOIN locations ON loginLocations.locationId = locations.locationId\r\nWHERE loginIdTable.loginId = '{LoginId}'");
+                    break;
+
+                case "position":
+
+                    result = HandleFieldInput($"SELECT positionTitle\r\nFROM positions\r\nJOIN userPositions ON positions.positionId = userpositions.positionId\r\nJOIN loginidtable ON userpositions.userId = loginidtable.userId\r\nWhere loginId = '{LoginId}'");
+                    break;
+
+                case "userid":
+
+                    result = HandleFieldInput($"SELECT userId\r\nFROM loginIdTable\r\nWHERE loginId = '{LoginId}'");
+                    break;
+
+                case "forenames":
+
+                    result = HandleFieldInput($"SELECT forenames\r\nFROM personalinfo\r\nJOIN loginidtable ON personalinfo.userId = loginidtable.userId \r\nWHERE loginId = '{LoginId}'");
+                    break;
+
+                case "surname":
+
+                    result = HandleFieldInput($"SELECT surname\r\nFROM personalinfo\r\nJOIN loginidtable ON personalinfo.userId = loginidtable.userId \r\nWHERE loginId = '{LoginId}'");
+                    break;
+
+
+                case "title":
+
+                    result = HandleFieldInput($"SELECT title\r\nFROM personalinfo\r\nJOIN loginidtable ON personalinfo.userId = loginidtable.userId \r\nWHERE loginId = '{LoginId}'");
+                    break;
+
+                case "email":
+
+                    result = HandleFieldInput($"SELECT email, adminEmail\r\nFROM contactinformation\r\nJOIN personalinfo ON contactinformation.userId = personalinfo.userId\r\nJOIN loginidtable ON personalinfo.userId = loginidtable.userId\r\nWHERE loginId = '{LoginId}'", 2);
+                    break;
+
+                case "phone":
+
+                    result = HandleFieldInput($"SELECT primaryphone, secondaryphone\r\nFROM contactinformation\r\nJOIN personalinfo ON contactinformation.userId = personalinfo.userId\r\nJOIN loginidtable ON personalinfo.userId = loginidtable.userId\r\nWHERE loginId = '{LoginId}'", 2);
+                    break;
+
+                case "loginid":
+
+                    result = HandleFieldInput($" SELECT *\r\nFROM loginIdTable\r\nWhere loginidtable.loginId = '{LoginId}'");
+                    break;
+
+                default:
+                    return $"{field} is not a recognised field ";
+
+            }
+
+            return $"look up of '{field}' for loginid: '{LoginId}' returned:  \r\n{result}";
+
+
+        }
+
+        public void AddNewUser(string LoginId)
+        {
+            _connection.Open();
+
+            // Insert new user into databe
+            string addNewUser = $"INSERT INTO personalInfo (title, forenames, surname)\r\nVALUES (null, null, null)";
+
+            MySqlCommand cmd = new MySqlCommand(addNewUser, _connection);
+
+            cmd.ExecuteNonQuery();
+
+
+
+            // Get New Users Id
+            int lastID = 0;
+
+            string retrieveLastId = "SELECT MAX(userId) FROM personalInfo";
+
+            MySqlCommand cmd1 = new MySqlCommand(retrieveLastId, _connection);
+
+            MySqlDataReader rdr = cmd1.ExecuteReader();
+
+            while (rdr.Read())
+            {
+                lastID = int.Parse(rdr[0].ToString()!);
 
             }
             rdr.Close();
 
-            string addNewUser = $"INSERT INTO acw_whois_database.users (`userId`,`loginId`,`{field}`) VALUES ({lastID},'{LoginId}','{valueToInsert}')";
 
-            cmd.CommandText = addNewUser;
+            //Add new user to all tables in database assign values as unknown or null.
 
-            cmd.ExecuteNonQuery();
+            string updateLoginId = $"\r\nINSERT INTO loginIdTable (userId, loginId)\r\nVALUES ({lastID}, '{LoginId}'); \r\n\r\nINSERT INTO userPositions (userId, positionId)\r\nVALUES ({lastID}, (SELECT positionId FROM positions WHERE positionTitle = 'unknown')); \r\n\r\nINSERT INTO contactInformation (userId, email, adminEmail, primaryPhone, secondaryPhone)\r\nVALUES ({lastID}, NULL, NULL, NULL, NULL); \r\n\r\nINSERT INTO loginLocations (locationId, loginId)\r\nVALUES ((SELECT locationId FROM locations WHERE locationName = 'unknown'), '{LoginId}');";
+
+            MySqlCommand cmd2 = new MySqlCommand(updateLoginId, _connection);
+
+            cmd2.ExecuteNonQuery();
 
             _connection.Close();
 
@@ -148,25 +233,92 @@ namespace whois
 
             try
             {
+                _connection.Open();
+                field = field.ToLower();
 
-                if (GetLookup(LoginId, field) != null)
+                switch (field)
                 {
-                    _connection.Open();
+                    case "location":
 
-                    string UpdateUserInfo = $"UPDATE acw_whois_database.users SET {field} = '{valueToInsert}' WHERE loginId = '{LoginId}'";
+                        if (CheckLocationExists(valueToInsert) == null)
+                        {
 
-                    MySqlCommand cmd = new MySqlCommand(UpdateUserInfo, _connection);
+                            string UpdateUserInfo = $"INSERT INTO locations (locationName)\r\nVALUES ('{valueToInsert}');\r\n\r\nUPDATE loginLocations\r\nSET locationId = (\r\n    SELECT locationId\r\n    FROM locations\r\n    WHERE locationName = '{valueToInsert}'\r\n)\r\nWHERE loginId = '{LoginId}';";
 
-                    cmd.ExecuteNonQuery();
+                            MySqlCommand cmd = new MySqlCommand(UpdateUserInfo, _connection);
 
-                    _connection.Close();
+                            cmd.ExecuteNonQuery();
 
-                    return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
-                }
+                            _connection.Close();
 
-                else
-                {
-                    return $"{LoginId} could not be found in database";
+                            return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
+
+                        }
+                        else
+                        {
+                            string UpdateUserInfo = $"UPDATE loginLocations\r\nSET locationId = (SELECT locationId FROM locations WHERE locationName = '{valueToInsert}')\r\nWHERE loginId = '{LoginId}';";
+
+                            MySqlCommand cmd = new MySqlCommand(UpdateUserInfo, _connection);
+
+                            cmd.ExecuteNonQuery();
+
+                            _connection.Close();
+
+                            return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
+                        }
+
+                    case "position":
+
+                        if (CheckPositionExists(valueToInsert) == null)
+                        {
+
+                            string UpdateUserInfo = $"\r\nINSERT INTO positions (positionTitle)\r\nVALUES ('{valueToInsert}');\r\n\r\n  \r\nUPDATE userPositions\r\nSET positionId = (\r\n    SELECT positionId FROM positions WHERE positionTitle = '{valueToInsert}'\r\n)\r\nWHERE userId = (\r\n    SELECT userId FROM loginIdTable WHERE loginId = '{LoginId}'\r\n);";
+                            MySqlCommand cmd = new MySqlCommand(UpdateUserInfo, _connection);
+
+                            cmd.ExecuteNonQuery();
+
+                            _connection.Close();
+
+                            return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
+
+                        }
+                        else
+                        {
+                            string UpdateUserInfo = $"UPDATE userPositions\r\nSET positionId = (\r\n    SELECT positionId FROM positions WHERE positionTitle = '{valueToInsert}'\r\n)\r\nWHERE userId = (\r\n    SELECT userId FROM loginIdTable WHERE loginId = '{LoginId}'\r\n);";
+
+                            MySqlCommand cmd = new MySqlCommand(UpdateUserInfo, _connection);
+
+                            cmd.ExecuteNonQuery();
+
+                            _connection.Close();
+
+                            return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
+                        }
+
+                    case "forenames":
+                        UpdatePersonalInfo(field, valueToInsert, LoginId);
+                        return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
+
+                    case "surname":
+                        UpdatePersonalInfo(field, valueToInsert, LoginId);
+                        return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
+
+                    case "title":
+                        UpdatePersonalInfo(field, valueToInsert, LoginId);
+                        return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
+
+                    case "email":
+                        UpdateConatctInfo(field, valueToInsert, LoginId);
+                        return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
+
+                    case "phone":
+                        UpdateConatctInfo("primaryphone", valueToInsert, LoginId);
+                        return $"Successfully updated {LoginId}'s {field} to {valueToInsert}";
+
+                    default:
+
+                        return $"{field} is not a recognised field ";
+
                 }
 
 
@@ -177,6 +329,7 @@ namespace whois
             }
 
         }
+
 
         public string DeleteUser(string LoginId)
         {
@@ -211,6 +364,78 @@ namespace whois
             }
 
         }
+
+
+        public string HandleFieldInput(string sqlCmd, int numberOfFields)
+        {
+            string result = null;
+            StringBuilder sb = new StringBuilder();
+
+            string getLookUp = sqlCmd;
+            MySqlCommand cmd = new MySqlCommand(getLookUp, _connection);
+            MySqlDataReader rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+            {
+                for (int i = 0; i < numberOfFields; i++)
+                {
+                    sb.AppendLine(rdr[i].ToString());
+                    sb.Append("");
+                }
+            }
+
+            result = sb.ToString();
+
+            _connection.Close();
+
+            return result;
+        }
+
+        public string HandleFieldInput(string sqlCmd)
+        {
+            string result = null;
+
+            string getLookUp = sqlCmd;
+            MySqlCommand cmd = new MySqlCommand(getLookUp, _connection);
+            MySqlDataReader rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+            {
+                result = $"{rdr[0]}";
+
+            }
+
+            _connection.Close();
+
+            return result;
+        }
+
+        public string UpdatePersonalInfo(string field, string value, string LoginId)
+        {
+
+            string UpdateUserInfo = $"UPDATE personalInfo\r\nSET {field} = '{value}' \r\nWHERE userId = (\r\n    SELECT userId FROM loginIdTable WHERE loginId = '{LoginId}'\r\n);";
+
+            MySqlCommand cmd = new MySqlCommand(UpdateUserInfo, _connection);
+
+            cmd.ExecuteNonQuery();
+
+            _connection.Close();
+
+            return $"Successfully updated {LoginId}'s {field} to {value}";
+        }
+
+        public string UpdateConatctInfo(string field, string value, string LoginId)
+        {
+
+            string UpdateUserInfo = $"UPDATE contactinformation\r\nSET {field} = '{value}'\r\nWHERE userid = (\r\nSELECT userId\r\nFROM loginidtable\r\nWhere loginId = '{LoginId}');";
+
+            MySqlCommand cmd = new MySqlCommand(UpdateUserInfo, _connection);
+
+            cmd.ExecuteNonQuery();
+
+            _connection.Close();
+
+            return $"Successfully updated {LoginId}'s {field} to {value}";
+        }
+
 
     }
 }

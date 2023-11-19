@@ -302,13 +302,15 @@ namespace whois
 
                 else
                 {
-                    if (databaseManager.GetLookup(ID, "loginId") is null)
+                    if (databaseManager.CheckUserExists(ID) is null)
                     {
                         string newID = command.Split("?")[0];
 
                         update = command.Split("=")[1];
 
-                        databaseManager.UpdateNewUser(newID, field, update);
+                        databaseManager.AddNewUser(newID);
+                        Update(newID, field, update);
+
 
                     }
                     else
@@ -344,15 +346,19 @@ namespace whois
         public void Lookup(String ID, String field)
         {
             
-            if (databaseManager.GetLookup(ID,field) is not null)
+            if (databaseManager.CheckUserExists(ID) is not null)
             {
                 Console.WriteLine($"lookup field: {field}");
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(databaseManager.GetLookup(ID, field));
+                Console.ForegroundColor= ConsoleColor.White;
             }
             else
             {
                 Console.WriteLine($"lookup field: {field}");
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"User '{ID}' does not exist");
+                Console.ForegroundColor = ConsoleColor.White;
             }
 
         }
@@ -376,11 +382,10 @@ namespace whois
             }
             else
             {
-                databaseManager.UpdateNewUser(ID, field, update);
+                //databaseManager.AddNewUser(ID);
+                Console.WriteLine(databaseManager.UpdateExistingUser(ID, field, update));
             }
 
-
-            Console.WriteLine("OK");
         }
 
         /// <summary>
