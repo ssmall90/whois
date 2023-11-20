@@ -10,10 +10,13 @@ namespace whois
 {
     /// <summary>
     /// This is a databse managing class for the database and networking coursework. 
+    /// It contains methods to intereact with the database and execute queries
     /// </summary>
     /// 
     public class DatabaseManager : IDatabaseManager
     {
+
+        #region Establish conection to databse
         static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=L3tM31n";
         private MySqlConnection _connection;
 
@@ -23,8 +26,16 @@ namespace whois
         public DatabaseManager()
         {
             _connection = new MySqlConnection(connectionString);
-        }
+        } 
+        #endregion
 
+
+        /// <summary>
+        /// This method opens a connection to the databse and returns a list of all the data 
+        /// stored in each field, for a specific login Id. 
+        /// </summary>
+        /// <param name="LoginId"></param>
+        /// <returns></returns>
         public string GetDump(string LoginId)
         {
 
@@ -59,6 +70,13 @@ namespace whois
 
         }
 
+
+        /// <summary>
+        /// This method queries the database using a given login ID.
+        /// It will return the login Id if it exists in the database otherwise it will return null.
+        /// </summary>
+        /// <param name="LoginId"></param>
+        /// <returns></returns>
         public string CheckUserExists(string LoginId)
 
         {
@@ -83,6 +101,13 @@ namespace whois
 
         }
 
+
+        /// <summary>
+        /// This method queries the database using a given location name.
+        /// It will return the location name if it exists in the database otherwise it will return null.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public string CheckLocationExists(string value)
         {
             string result = null;
@@ -103,6 +128,13 @@ namespace whois
             return result;
         }
 
+
+        /// <summary>
+        /// This method queries the database using a given position title.
+        /// It will return the position title if it exists in the database otherwise it will return null.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public string CheckPositionExists(string value)
         {
             string result = null;
@@ -123,6 +155,15 @@ namespace whois
             return result;
         }
 
+
+        /// <summary>
+        /// This method receives a login Id and a field as arguments. A switch statment is used to identify 
+        /// which field has been entered. Another method is called using a query specific to each field, 
+        /// which will return the data stored in the requested field for the desired login ID.
+        /// </summary>
+        /// <param name="LoginId"></param>
+        /// <param name="field"></param>
+        /// <returns></returns>
         public string GetLookup(string LoginId, string field)
         {
             string result = null;
@@ -195,6 +236,11 @@ namespace whois
 
         }
 
+
+        /// <summary>
+        /// This method is used to add a new user to the database. 
+        /// </summary>
+        /// <param name="LoginId"></param>
         public void AddNewUser(string LoginId)
         {
             _connection.Open();
@@ -208,7 +254,7 @@ namespace whois
 
 
 
-            // Get New Users Id
+            // Get New Users, user Id
             int lastID = 0;
 
             string retrieveLastId = "SELECT MAX(userId) FROM personalInfo";
@@ -238,6 +284,14 @@ namespace whois
 
         }
 
+
+        /// <summary>
+        /// This method is used to update the value of a given field for a specif login Id
+        /// </summary>
+        /// <param name="LoginId"></param>
+        /// <param name="field"></param>
+        /// <param name="valueToInsert"></param>
+        /// <returns></returns>
         public string UpdateExistingUser(string LoginId, string field, string valueToInsert)
         {
 
@@ -340,6 +394,12 @@ namespace whois
 
         }
 
+
+        /// <summary>
+        /// This method is used to delete a users login Id from the databae
+        /// </summary>
+        /// <param name="LoginId"></param>
+        /// <returns></returns>
         public string DeleteUser(string LoginId)
         {
             try
@@ -380,6 +440,15 @@ namespace whois
 
         }
 
+
+        /// <summary>
+        /// This method is used to handle lookup requests for different fields in the database. 
+        /// It can receive a sql command or a sql command and an integer as arguments.
+        /// The intger indicates the number of expected values to be returned if this value is to be more than 1. 
+        /// </summary>
+        /// <param name="sqlCmd"></param>
+        /// <param name="numberOfFields"></param>
+        /// <returns></returns>
         public string HandleFieldInput(string sqlCmd, int numberOfFields)
         {
             string result = null;
@@ -422,6 +491,14 @@ namespace whois
             return result;
         }
 
+
+        /// <summary>
+        /// This method is used to update the data of any of the fields, in the personal info table of the databse.
+        /// </summary>
+        /// <param name="field"></param>
+        /// <param name="value"></param>
+        /// <param name="LoginId"></param>
+        /// <returns></returns>
         public string UpdatePersonalInfo(string field, string value, string LoginId)
         {
 
@@ -436,6 +513,14 @@ namespace whois
             return $"Successfully updated {LoginId}'s {field} to {value}";
         }
 
+
+        /// <summary>
+        /// This method is used to update the data of any of the fields, in the contact information table of the databse.
+        /// </summary>
+        /// <param name="field"></param>
+        /// <param name="value"></param>
+        /// <param name="LoginId"></param>
+        /// <returns></returns>
         public string UpdateConatctInfo(string field, string value, string LoginId)
         {
 

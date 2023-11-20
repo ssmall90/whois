@@ -23,6 +23,7 @@ namespace whois
             databaseManager = pDatabaseManager;
         }
 
+
         /// <summary>
         /// When invoked this method will create and run a server.
         /// </summary>
@@ -71,6 +72,9 @@ namespace whois
         }
 
 
+        /// <summary>
+        /// This class is used to handle requests received by the server.
+        /// </summary>
         public class Handler
         {
 
@@ -369,6 +373,7 @@ namespace whois
 
         }
 
+
         /// <summary>
         /// Returns a list of all column headers and their associated values from a specified user/row in databse
         /// </summary>
@@ -377,6 +382,7 @@ namespace whois
         {
             Console.WriteLine(databaseManager.GetDump(ID));
         }
+
 
         /// <summary>
         /// Receives a user id and a field in the database, it returns the associated value for that field.
@@ -408,6 +414,7 @@ namespace whois
 
         }
 
+
         /// <summary>
         /// This method receives 3 arguments, a user id, a field in the database , and a value.
         /// It updates the received field with the received value, for the specified user. 
@@ -434,6 +441,7 @@ namespace whois
             }
 
         }
+
 
         /// <summary>
         /// This method will delete a user from the database
