@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace whois
 {
+    
     /// <summary>
     /// This is a server class for the database and networking coursework. 
     /// </summary>
@@ -396,16 +397,26 @@ namespace whois
             {
                 string result = databaseManager.GetLookup(ID, field);
                 Console.WriteLine($"lookup field: {field}");
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(result);
-                Console.ForegroundColor = ConsoleColor.White;
+                if (result.Contains("not".ToLower()))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(result);
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine(result);
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+
 
                 return result;
             }
             else
             {
                 Console.WriteLine($"lookup field: {field}");
-                Console.ForegroundColor = ConsoleColor.Green;
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"User '{ID}' does not exist");
                 Console.ForegroundColor = ConsoleColor.White;
 
@@ -425,18 +436,19 @@ namespace whois
         /// <param name="update"></param>
         void Update(String ID, String field, String update)
         {
+            
+            string result = (databaseManager.UpdateExistingUser(ID, field, update));
 
-            if (databaseManager.GetLookup(ID, "loginId") is not null)
+            if (result.Contains("not".ToLower()) )
             {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(databaseManager.UpdateExistingUser(ID, field, update));
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(result);
                 Console.ForegroundColor = ConsoleColor.White;
-
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(databaseManager.UpdateExistingUser(ID, field, update));
+                Console.WriteLine(result);
                 Console.ForegroundColor = ConsoleColor.White;
             }
 
@@ -449,7 +461,9 @@ namespace whois
         /// <param name="ID"></param>
         void Delete(String ID)
         {
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
             Console.WriteLine($"Are you sure you want to delete record '{ID}' from database? Y/N");
+            Console.ForegroundColor = ConsoleColor.White;
 
             string response = Console.ReadLine();
 

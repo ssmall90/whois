@@ -2,7 +2,7 @@
   "profiles": {
     "whois": {
       "commandName": "Project",
-      "commandLineArgs": "cssbct\r\n"
+      "commandLineArgs": "cssntf\r\ncssbct\r\ncsstnf?grid\r\ncssbct?grid\r\ncssthd?location\r\ncsftrm?jacki=10\r\ncssbct?jack=20\r\ncsshgf?location=DAIM\r\ncsshgf?\r\n\r\n"
     }
   }
 }

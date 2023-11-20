@@ -17,7 +17,7 @@ namespace whois
     {
 
         #region Establish conection to databse
-        static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=L3tM31n";
+        static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=Liverpool8???";
         private MySqlConnection _connection;
 
 
@@ -220,18 +220,20 @@ namespace whois
                     break;
 
                 default:
+                    _connection.Close();
                     return $"{field} is not a recognised field ";
 
             }
             if (result == null)
             {
+                _connection.Close();
                 return $"look up of '{field}' for loginid: '{LoginId}' \r\nreturned: User Can Not Be Found In Database";
             }
             else
             {
+                _connection.Close();
                 return $"look up of '{field}' for loginid: '{LoginId}' \r\nreturned: {result}";
             }
-
 
 
         }
@@ -381,6 +383,7 @@ namespace whois
 
                     default:
 
+                        _connection.Close();
                         return $"{field} is not a recognised field ";
 
                 }
@@ -389,6 +392,7 @@ namespace whois
             }
             catch (Exception ex)
             {
+                _connection.Close();
                 return $"Database error {(ex.ToString())}";
             }
 
@@ -429,12 +433,14 @@ namespace whois
 
                 else
                 {
+                    _connection.Close();
                     return $"User '{LoginId}' could not be found in database";
                 }
 
             }
             catch (Exception ex)
             {
+                _connection.Close();
                 return $"Database error {(ex.ToString())}";
             }
 
