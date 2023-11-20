@@ -17,7 +17,7 @@ namespace whois
     {
 
         #region Establish conection to databse
-        static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=Liverpool8???";
+        static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=L3tM31n";
         private MySqlConnection _connection;
 
 
