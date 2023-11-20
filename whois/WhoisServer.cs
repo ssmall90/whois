@@ -31,7 +31,8 @@ namespace whois
 
             TcpListener listener;
             Socket connection;
-            NetworkStream socketStream;
+            Handler requestHandler;
+
             try
             {
                 //Create a TCP socket to listen for requests on port 43.
@@ -51,15 +52,14 @@ namespace whois
                     //Upon receipt of a request create a socket to handle it.
                     Console.WriteLine("Server Has Started Listening.....");
                     connection = listener.AcceptSocket();
-                    socketStream = new NetworkStream(connection);
+
                     connection.SendTimeout = 1000;
                     connection.ReceiveTimeout = 1000;
-                    Console.WriteLine("Connection Received");
-                    DoRequest(socketStream);
 
-                    //Close network stream and socket once request is complete.
-                    socketStream.Close();
-                    connection.Close();
+                    requestHandler = new Handler(databaseManager);
+                    Thread t = new Thread(() => requestHandler.DoRequest(connection));
+                    t.Start();
+
                 }
                 #endregion
             }
@@ -70,198 +70,222 @@ namespace whois
             }
         }
 
-        /// <summary>
-        /// When the server receives a connection from on the TCP listener
-        /// This method processes POST or GET requests and returns an appropriate reply
-        /// </summary>
-        /// <param name="socketStream"></param>
-        public void DoRequest(NetworkStream socketStream)
+
+        public class Handler
         {
-            //Create Streamreader and Streamwriter to handle socket I/O
-            StreamWriter sw = new StreamWriter(socketStream);
-            StreamReader sr = new StreamReader(socketStream);
 
-            try
+            IDatabaseManager _databaseManager;
+
+            public Handler(IDatabaseManager databaseManager)
             {
+                _databaseManager = databaseManager;
+            }
 
-                //Read first line
-                string line = sr.ReadLine().Trim();
+            /// <summary>
+            /// When the server receives a connection from on the TCP listener
+            /// This method processes POST or GET requests and returns an appropriate reply
+            /// </summary>
+            /// <param name="socketStream"></param>
+            public void DoRequest(Socket connection)
+            {
+                NetworkStream socketStream;
+                socketStream = new NetworkStream(connection);
+                Console.WriteLine("Connection Received");
 
 
-                //Handle any null lines
-                if (line == null)
+                //Create Streamreader and Streamwriter to handle socket I/O
+                StreamWriter sw = new StreamWriter(socketStream);
+                StreamReader sr = new StreamReader(socketStream);
+
+                try
                 {
-                    Console.WriteLine("Ignoring null command");
-                    return;
-                }
+                    //Set timeout value to 1 second
+                    socketStream.ReadTimeout = 1000;
+                    socketStream.WriteTimeout = 1000;
+
+                    //Read first line
+                    string line = sr.ReadLine().Trim();
 
 
-                #region Handling of Post Request 
-                else if (line == "POST / HTTP/1.1")
-                {
-                    int contentLength = 0;
-
-                    while (line != "")
+                    //Handle any null lines
+                    if (line == null)
                     {
-                        line = sr.ReadLine(); // Skip to blank line
+                        Console.WriteLine("Ignoring null command");
+                        return;
+                    }
 
-                        if (line.StartsWith("Content-Length: ")) //
+
+                    #region Handling of Post Request 
+                    else if (line == "POST / HTTP/1.1")
+                    {
+                        int contentLength = 0;
+
+                        while (line != "")
                         {
-                            contentLength = Int32.Parse(line.Substring(16)); // Retrieve length of the content
+                            line = sr.ReadLine(); // Skip to blank line
+
+                            if (line.StartsWith("Content-Length: ")) //
+                            {
+                                contentLength = Int32.Parse(line.Substring(16)); // Retrieve length of the content
+                            }
                         }
+
+                        // Set line to empty string and append each character of the stream to line
+                        line = "";
+                        for (int i = 0; i < contentLength; i++) line += (char)sr.Read(); // 
+
+
+                        //Split line into 2 sections and store the ID and the Value 
+                        String[] slices = line.Split(new char[] { '&' }, 2);
+                        String ID = slices[0].Substring(5);
+                        String value = slices[1].Substring(9);
+
+
+                        //Return result from update request to the database
+                        string result;
+
+                        if (_databaseManager.CheckUserExists(ID) is null)
+                        {
+
+                            _databaseManager.AddNewUser(ID);
+                            result = _databaseManager.UpdateExistingUser(ID, "location", value);
+
+
+
+                        }
+                        else
+                        {
+
+                            result = _databaseManager.UpdateExistingUser(ID, "location", value);
+                        }
+
+
+                        //if request was unsuccessful send response and console log the result
+                        if (result.Contains("could not be found in database"))
+                        {
+                            sw.WriteLine("HTTP/1.1 404 Not Found");
+                            sw.WriteLine("Content-Type: text/plain");
+                            sw.WriteLine();
+                            sw.WriteLine(result);
+                            sw.Flush();
+                            Console.WriteLine($"Received an update request for '{ID}' to '{value}");
+                            Console.WriteLine(result);
+                            Console.WriteLine();
+
+                        }
+
+                        //If result was successful, send response and console log the result
+                        else
+                        {
+
+                            sw.WriteLine("HTTP/1.1 200 OK");
+                            sw.WriteLine("Content-Type: text/plain");
+                            sw.WriteLine();
+                            sw.WriteLine(result);
+                            sw.Flush();
+
+                            Console.WriteLine($"Received an update request for '{ID}' to '{value}");
+                            Console.WriteLine();
+                            Console.WriteLine(result);
+
+                        }
+
                     }
-
-                    // Set line to empty string and append each character of the stream to line
-                    line = "";
-                    for (int i = 0; i < contentLength; i++) line += (char)sr.Read(); // 
+                    #endregion
 
 
-                    //Split line into 2 sections and store the ID and the Value 
-                    String[] slices = line.Split(new char[] { '&' }, 2);
-                    String ID = slices[0].Substring(5);
-                    String value = slices[1].Substring(9);
 
-
-                    //Return result from update request to the database
-                    string result;
-
-                    if (databaseManager.CheckUserExists(ID) is null)
+                    #region Handling of Get Request
+                    else if (line.StartsWith("GET /?name=") && line.EndsWith(" HTTP/1.1"))
                     {
+                        string[] slices = line.Split(" ");  // Split into 3 pieces
+                        string ID = slices[1].Substring(7);  // Store ID
 
-                        databaseManager.AddNewUser(ID);
-                        result = databaseManager.UpdateExistingUser(ID, "location", value);
-                        
 
+                        // Look up Location field of specified ID in database
+                        string result = (_databaseManager.GetLookup(ID, "location"));
+
+
+                        //If lookup was successful. Write and send response, then console log the result of lookup.
+                        if (result is not null)
+                        {
+
+                            sw.WriteLine("HTTP/1.1 200 OK");
+                            sw.WriteLine("Content-Type: text/plain");
+                            sw.WriteLine();
+                            sw.WriteLine(result);
+                            sw.Flush();
+
+
+                            Console.WriteLine($"Performed Lookup on '{ID}' returning '{result}'");
+                            Console.WriteLine();
+                        }
+
+
+                        //If lookup was unsuccessful. Write and send response, then console log the result of lookup.
+                        else
+                        {
+                            sw.WriteLine("HTTP/1.1 404 Not Found");
+                            sw.WriteLine("Content-Type: text/plain");
+                            sw.WriteLine();
+                            sw.Flush();
+                            Console.WriteLine($"Performed Lookup on '{ID}' returning '404 Not Found'");
+                            Console.WriteLine();
+
+
+                        }
 
                     }
+                    #endregion
+
+
+                    #region Handling Unrecognised Requests
+                    // Write and send response. Console log the unrecognised command
                     else
                     {
 
-                         result = databaseManager.UpdateExistingUser(ID, "location", value);
-                    }
-
-
-                    //if request was unsuccessful send response and console log the result
-                    if (result.Contains("could not be found in database"))
-                    {
-                        sw.WriteLine("HTTP/1.1 404 Not Found");
+                        sw.WriteLine("HTTP/1.1 400 Bad Request");
                         sw.WriteLine("Content-Type: text/plain");
                         sw.WriteLine();
-                        sw.WriteLine(result);
-                        sw.Flush();
-                        Console.WriteLine($"Received an update request for '{ID}' to '{value}");
-                        Console.WriteLine(result);
-                        Console.WriteLine();
-
-                    }
-
-                    //If result was successful, send response and console log the result
-                    else
-                    {
-
-                        sw.WriteLine("HTTP/1.1 200 OK");
-                        sw.WriteLine("Content-Type: text/plain");
-                        sw.WriteLine();
-                        sw.WriteLine(result);
                         sw.Flush();
 
-                        Console.WriteLine($"Received an update request for '{ID}' to '{value}");
+                        Console.WriteLine($"Unrecognised command: '{line}'");
                         Console.WriteLine();
-                        Console.WriteLine(result);
+
 
                     }
+                    #endregion
 
                 }
-                #endregion
 
 
-
-                #region Handling of Get Request
-                else if (line.StartsWith("GET /?name=") && line.EndsWith(" HTTP/1.1"))
+                // Catch and unexpected behaviour during command processing and display exceptions to console.
+                catch (Exception ex)
                 {
-                    string[] slices = line.Split(" ");  // Split into 3 pieces
-                    string ID = slices[1].Substring(7);  // Store ID
-
-
-                    // Look up Location field of specified ID in database
-                    string result = (databaseManager.GetLookup(ID, "location"));
-
-
-                    //If lookup was successful. Write and send response, then console log the result of lookup.
-                    if (result is not null)
-                    {
-
-                        sw.WriteLine("HTTP/1.1 200 OK");
-                        sw.WriteLine("Content-Type: text/plain");
-                        sw.WriteLine();
-                        sw.WriteLine(result);
-                        sw.Flush();
-
- 
-                        Console.WriteLine($"Performed Lookup on '{ID}' returning '{result}'");
-                        Console.WriteLine();
-                    }
-
-
-                    //If lookup was unsuccessful. Write and send response, then console log the result of lookup.
-                    else
-                    {
-                        sw.WriteLine("HTTP/1.1 404 Not Found");
-                        sw.WriteLine("Content-Type: text/plain");
-                        sw.WriteLine();
-                        sw.Flush();
-                        Console.WriteLine($"Performed Lookup on '{ID}' returning '404 Not Found'");
-                        Console.WriteLine();
-
-
-                    }
-
-                }
-                #endregion
-
-
-                #region Handling Unrecognised Requests
-                // Write and send response. Console log the unrecognised command
-                else
-                {
-
-                    sw.WriteLine("HTTP/1.1 400 Bad Request");
-                    sw.WriteLine("Content-Type: text/plain");
-                    sw.WriteLine();
-                    sw.Flush();
-
-                    Console.WriteLine($"Unrecognised command: '{line}'");
+                    Console.WriteLine($"Respone Timeout");
                     Console.WriteLine();
-
+                    sw.Close();
+                    sr.Close();
 
                 }
-                #endregion
 
+                // Close streamreader and streamwriter as request has now been processed.
+                finally
+                {
+
+                    //Close network stream and socket once request is complete.
+
+                    sw.Close();
+                    sr.Close();
+                    socketStream.Close();
+                    connection.Close();
+
+                }
             }
 
-
-            // Catch and unexpected behaviour during command processing and display exceptions to console.
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Respone Timeout");
-                Console.WriteLine();
-                sw.Close();
-                sr.Close();
-
-            }
-
-            // Close streamreader and streamwriter as request has now been processed.
-            finally
-            {
-                sw.Close();
-                sr.Close();
-
-
-            }
         }
-    
 
-        
+
 
         /// <summary>
         /// This method is used to handle command line inputs formatted according to coursework brief.
@@ -310,7 +334,7 @@ namespace whois
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("User does not exist");
-                        Console.ForegroundColor= ConsoleColor.White;
+                        Console.ForegroundColor = ConsoleColor.White;
                     }
                 }
 
@@ -365,14 +389,14 @@ namespace whois
         /// <param name="field"></param>
         public string Lookup(String ID, String field)
         {
-            
+
             if (databaseManager.CheckUserExists(ID) is not null)
             {
                 string result = databaseManager.GetLookup(ID, field);
                 Console.WriteLine($"lookup field: {field}");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(result);
-                Console.ForegroundColor= ConsoleColor.White;
+                Console.ForegroundColor = ConsoleColor.White;
 
                 return result;
             }
