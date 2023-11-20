@@ -39,7 +39,7 @@ namespace whois
             {
                 //Create a TCP socket to listen for requests on port 43.
                 #region Create and Start TCP Listener
-                listener = new TcpListener(IPAddress.Any, 8080);
+                listener = new TcpListener(IPAddress.Any, 43);
                 listener.Start();
                 //Console.WriteLine("Server Has Started Listening");
                 #endregion
