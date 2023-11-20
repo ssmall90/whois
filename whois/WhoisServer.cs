@@ -39,7 +39,7 @@ namespace whois
             {
                 //Create a TCP socket to listen for requests on port 43.
                 #region Create and Start TCP Listener
-                listener = new TcpListener(IPAddress.Any, 43);
+                listener = new TcpListener(IPAddress.Any, 8080);
                 listener.Start();
                 //Console.WriteLine("Server Has Started Listening");
                 #endregion
@@ -52,6 +52,7 @@ namespace whois
                 {
 
                     //Upon receipt of a request create a socket to handle it.
+                    Console.WriteLine();
                     Console.WriteLine("Server Has Started Listening.....");
                     connection = listener.AcceptSocket();
 
@@ -59,8 +60,9 @@ namespace whois
                     //connection.ReceiveTimeout = 1000;
 
                     requestHandler = new Handler(databaseManager);
-                    Thread t = new Thread(() => requestHandler.DoRequest(connection));
-                    t.Start();
+                    requestHandler.DoRequest(connection);
+                    //Thread t = new Thread(() => requestHandler.DoRequest(connection));
+                    //t.Start();
 
                 }
                 #endregion
@@ -96,7 +98,7 @@ namespace whois
                 NetworkStream socketStream;
                 socketStream = new NetworkStream(connection);
                 Console.WriteLine("Connection Received");
-
+                Console.WriteLine();
 
                 //Create Streamreader and Streamwriter to handle socket I/O
                 StreamWriter sw = new StreamWriter(socketStream);
@@ -105,11 +107,11 @@ namespace whois
                 try
                 {
                     //Set timeout value to 1 second
-                    //socketStream.ReadTimeout = 1000;
-                    //socketStream.WriteTimeout = 1000;
+                    socketStream.ReadTimeout = 1000;
+                    socketStream.WriteTimeout = 1000;
 
                     //Read first line
-                    string line = sr.ReadLine().Trim();
+                    string line = sr.ReadLine();
 
 
                     //Handle any null lines
@@ -142,8 +144,9 @@ namespace whois
 
                         //Split line into 2 sections and store the ID and the Value 
                         String[] slices = line.Split(new char[] { '&' }, 2);
-                        String ID = slices[0].Substring(5);
-                        String value = slices[1].Substring(9);
+                        String ID = slices[0].Split("=")[1];
+                        String value = slices[1].Split("=")[1];
+                        string field = slices[1].Split("=")[0];
 
 
                         //Return result from update request to the database
@@ -153,12 +156,13 @@ namespace whois
                         {
 
                             _databaseManager.AddNewUser(ID);
-                            result = _databaseManager.UpdateExistingUser(ID, "location", value);
+                            result = _databaseManager.UpdateExistingUser(ID, field, value);
 
                         }
                         else
                         {
-                            result = _databaseManager.UpdateExistingUser(ID, "location", value);
+                            
+                            result = _databaseManager.UpdateExistingUser(ID, field, value);
                         }
 
 
@@ -219,8 +223,8 @@ namespace whois
                             sw.Flush();
 
 
-                            Console.WriteLine($"Performed Lookup on '{ID}' returning '{result}'");
-                            Console.WriteLine();
+                            Console.WriteLine($"Performed Lookup on '{ID}'");
+                            Console.WriteLine(result);
                         }
 
 
@@ -461,26 +465,13 @@ namespace whois
         /// <param name="ID"></param>
         void Delete(String ID)
         {
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-            Console.WriteLine($"Are you sure you want to delete record '{ID}' from database? Y/N");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(databaseManager.DeleteUser(ID));
             Console.ForegroundColor = ConsoleColor.White;
-
-            string response = Console.ReadLine();
-
-            if (response == "Y" || response == "y")
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(databaseManager.DeleteUser(ID));
-                Console.ForegroundColor = ConsoleColor.White;
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"User '{ID}' was not deleted from database");
-                Console.ForegroundColor = ConsoleColor.White;
-            }
-
         }
+
+
 
     }
 }

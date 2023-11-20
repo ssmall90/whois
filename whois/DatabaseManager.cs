@@ -3,6 +3,7 @@ using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,7 +18,7 @@ namespace whois
     {
 
         #region Establish conection to databse
-        static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=L3tM31n";
+        static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=L3tM31n???";
         private MySqlConnection _connection;
 
 
@@ -227,12 +228,12 @@ namespace whois
             if (result == null)
             {
                 _connection.Close();
-                return $"look up of '{field}' for loginid: '{LoginId}' \r\nreturned: User Can Not Be Found In Database";
+                return $"look up of '{field}' for loginid: '{LoginId}' returned: User can not be found in database";
             }
             else
             {
                 _connection.Close();
-                return $"look up of '{field}' for loginid: '{LoginId}' \r\nreturned: {result}";
+                return $"look up of '{field}' for loginid: '{LoginId}' returned: {result}";
             }
 
 
@@ -350,7 +351,7 @@ namespace whois
                         }
                         else
                         {
-                            string UpdateUserInfo = $"UPDATE userPositions\r\nSET positionId = (\r\n    SELECT positionId FROM positions WHERE positionTitle = '{valueToInsert}'\r\n)\r\nWHERE userId = (\r\n    SELECT userId FROM loginIdTable WHERE loginId = '{LoginId}'\r\n);";
+                            string UpdateUserInfo = $"UPDATE userPositions\r\nSET positionId = (\r\n    SELECT positionId FROM positions WHERE positionTitle = '{valueToInsert}'\r\n)\r\nWHERE userId = (\r\n    SELECT userId FROM loginIdTable WHERE loginId = '{LoginId}'\r\n );";
 
                             MySqlCommand cmd = new MySqlCommand(UpdateUserInfo, _connection);
 
@@ -482,19 +483,31 @@ namespace whois
         public string HandleFieldInput(string sqlCmd)
         {
             string result = null;
+            StringBuilder sb = new StringBuilder();
+
+            List<string> results = new List<string>();
 
             string getLookUp = sqlCmd;
             MySqlCommand cmd = new MySqlCommand(getLookUp, _connection);
             MySqlDataReader rdr = cmd.ExecuteReader();
-            while (rdr.Read())
+            if (rdr.HasRows)
             {
-                result = $"{rdr[0]}";
+                while (rdr.Read())
+                {
 
+                    string value = rdr.GetString(0);
+                    results.Add(value);
+
+                }
             }
 
+            foreach(var r in results)
+            {
+                sb.AppendLine(r);
+            }
             _connection.Close();
 
-            return result;
+            return $"\r\n{sb.ToString()}";
         }
 
 
