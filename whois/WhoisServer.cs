@@ -53,8 +53,8 @@ namespace whois
                     Console.WriteLine("Server Has Started Listening.....");
                     connection = listener.AcceptSocket();
 
-                    connection.SendTimeout = 1000;
-                    connection.ReceiveTimeout = 1000;
+                    //connection.SendTimeout = 1000;
+                    //connection.ReceiveTimeout = 1000;
 
                     requestHandler = new Handler(databaseManager);
                     Thread t = new Thread(() => requestHandler.DoRequest(connection));
@@ -100,8 +100,8 @@ namespace whois
                 try
                 {
                     //Set timeout value to 1 second
-                    socketStream.ReadTimeout = 1000;
-                    socketStream.WriteTimeout = 1000;
+                    //socketStream.ReadTimeout = 1000;
+                    //socketStream.WriteTimeout = 1000;
 
                     //Read first line
                     string line = sr.ReadLine().Trim();
@@ -150,12 +150,9 @@ namespace whois
                             _databaseManager.AddNewUser(ID);
                             result = _databaseManager.UpdateExistingUser(ID, "location", value);
 
-
-
                         }
                         else
                         {
-
                             result = _databaseManager.UpdateExistingUser(ID, "location", value);
                         }
 
@@ -294,7 +291,6 @@ namespace whois
         /// <param name="command"></param>
         public void ProcessCommand(string command)
         {
-            DatabaseManager databaseManager = new DatabaseManager();
 
             try
             {
@@ -313,7 +309,7 @@ namespace whois
                     if (pieces.Length == 2) update = pieces[1];
 
 
-                    if (operation == "")
+                    if (operation == "") // checks for delete command
                     {
 
                         Delete(ID);
@@ -322,7 +318,7 @@ namespace whois
                 }
 
 
-                if (operation == null)
+                if (operation == null) // checks for dump command
                 {
 
                     if (databaseManager.CheckUserExists(ID) is not null)
@@ -339,25 +335,25 @@ namespace whois
                 }
 
 
-                else if (update == null)
+                else if (update == null) // checks for look up command
                 {
                     Lookup(ID, field);
                 }
 
-                else
+                else // checks for update command 
                 {
-                    if (databaseManager.CheckUserExists(ID) is null)
+                    if (databaseManager.CheckUserExists(ID) is null) // checks if user exsits then adds new user and updates corresponding field 
                     {
                         string newID = command.Split("?")[0];
 
                         update = command.Split("=")[1];
 
-                        databaseManager.AddNewUser(newID);
+                        databaseManager.AddNewUser(newID); 
                         Update(newID, field, update);
 
 
                     }
-                    else
+                    else // updates exsisting users corresponding field.
                     {
                         update = command.Split("=")[1];
                         Update(ID, field, update);
@@ -366,7 +362,7 @@ namespace whois
                 }
             }
 
-            catch (Exception e)
+            catch (Exception e) // Handles any unrecognised commands
             {
                 Console.WriteLine($"Fault in Command Processing: {e.ToString()}");
             }
