@@ -17,8 +17,8 @@ namespace whois
     public class DatabaseManager : IDatabaseManager
     {
 
-        #region Establish conection to databse
-        static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=L3tM31n???";
+        #region Establish conection to database
+        static string connectionString = "server=localhost;user=root;database=acw_whois_database;port=3306;password=L3tM31n";
         private MySqlConnection _connection;
 
 
@@ -477,7 +477,7 @@ namespace whois
 
             _connection.Close();
 
-            return result;
+            return $"\r\n{result}";
         }
 
         public string HandleFieldInput(string sqlCmd)
@@ -507,7 +507,16 @@ namespace whois
             }
             _connection.Close();
 
-            return $"\r\n{sb.ToString()}";
+            if (results == null || results.Count < 1)
+            {
+                return result;
+            }
+            else
+            {
+                return $"\r\n{sb.ToString()}";
+            }
+
+
         }
 
 
